@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 import time
 import platform
+import random
 
 originUrl = 'https://sellercentral.amazon.com/orders-v3/order/'
 system = platform.system()
@@ -47,7 +48,7 @@ def get_data_order_number(order_num):
 	url = originUrl + order_num
 	browser.get(url)
 
-	time.sleep(1)
+	time.sleep(random.randint(2,5))
 
 	status_tabs = browser.find_elements_by_xpath(".//*[@class='a-keyvalue']")
 
@@ -67,10 +68,15 @@ def get_data_order_number(order_num):
 		prix_span = td_s[5].find_elements_by_tag_name('span')[0]
 		prix = prix_span.get_attribute('textContent')
 
-		print(status_value,asin,num,prix)
-		return status_value, asin, num, prix
+		total_order_spans = td_s[6].find_elements_by_xpath(".//*[@class='a-color- a-text-bold']")
+		total_order = '未知'
+		if len(total_order_spans):
+			total_order = total_order_spans[0].get_attribute('textContent')
+
+		print(status_value,asin,num,prix,total_order)
+		return status_value, asin, num, prix, total_order
 	else:
-		return "数据异常", "数据异常", "数据异常", "数据异常"
+		return "数据异常", "数据异常", "数据异常", "数据异常", "数据异常"
 
 
 
@@ -78,13 +84,14 @@ def start_get_all_data():
 	workbookCopy, orders = get_sheet_mes()
 	sheet = workbookCopy.get_sheet(0)
 	for x in range(1,len(orders)):
-		status, asin, num, prix = get_data_order_number(orders[x])
+		status, asin, num, prix, total = get_data_order_number(orders[x])
 		time = get_date()
 		sheet.write(x, 1, status)
 		sheet.write(x, 2, asin)
 		sheet.write(x, 3, num)
 		sheet.write(x, 4, prix)
-		sheet.write(x, 5, time)
+		sheet.write(x, 5, total)
+		sheet.write(x, 6, time)
 
 		savexls(workbookCopy)
 
